@@ -1,5 +1,12 @@
+const express = require("express");
+const PORT = process.env.PORT || 3030;
+const INDEX = "../Frontend/src/index.js";
+const server = express()
+  .use((req, res) => res.sendFile(INDEX, { root: __dirname }))
+  .listen(PORT, () => console.log(`listening on ${PORT}`));
+
 const Websocket = require("ws");
-const wss = new Websocket.Server({ port: 3030 });
+const wss = new Websocket.Server({ server });
 const tmi = require("tmi.js");
 let isListening = false;
 let latestMsg = "";
@@ -101,17 +108,6 @@ onStreamReset = () => {
 onBeginListenMsg = () => {
   console.log("beginning to listen");
   isListening = true;
-  // timer = setTimeout(() => {
-  //   isListening = false;
-  //   console.log("stopped listening");
-  //   //look for ways to just end this function when islistening is set to false from elsewhere
-  // }, chatTimer * 1000);
-  // const responseMsg = {
-  //   type: "doneListening"
-  // };
-  // wss.clients.forEach(wsClient => {
-  //   wsClient.send(JSON.stringify(responseMsg));
-  // });
 };
 
 onGetMadlibLibraryMsg = () => {
