@@ -10,10 +10,9 @@ const wss = new Websocket.Server({ server });
 const tmi = require("tmi.js");
 let isListening = false;
 let latestMsg = "";
-// let chatTimer = 0;
+
 let client;
 const madlibLibraryJson = require("./MadlibLibrary.json");
-// let timer;
 
 let opts = {
   identity: {
@@ -32,7 +31,16 @@ function clientSetup() {
 }
 
 function onDisconnectedHandler() {
+  // clearTwitchConnection();
   console.log(`* disconnected`);
+}
+
+function clearTwitchConnection() {
+  if (client !== undefined) {
+    client.disconnect();
+  }
+  client = undefined;
+  isListening = false;
 }
 
 function onConnectedHandler(addr, port) {
@@ -44,18 +52,16 @@ function onMessageHandler(target, context, msg, self) {
     return;
   }
   latestMsg = msg;
-
   if (isListening) {
     wss.clients.forEach(onMsgReceivedFromTwitch);
   }
 }
 
 wss.on("connection", ws => {
-  console.log("client connected");
+  // console.log("client connected");
   ws.on("message", wsMessageHandler);
   ws.on("close", () => {
-    client = undefined;
-    console.log("client disconnected");
+    clearTwitchConnection();
   });
 });
 
@@ -71,7 +77,7 @@ onMsgReceivedFromTwitch = client => {
 
 wsMessageHandler = msg => {
   const jsonMsg = JSON.parse(msg);
-  console.log("msg from client: ", jsonMsg);
+  // console.log("msg from ws client: ", jsonMsg);
   switch (jsonMsg.type) {
     case "setupConfig":
       onSetupConfigMsg(jsonMsg.payload);
@@ -100,7 +106,7 @@ onStopListening = () => {
 onStreamReset = () => {
   console.log("running streamreset");
   if (client !== undefined) {
-    client.disconnect();
+    clearTwitchConnection();
   }
   isListening = false;
 };
@@ -119,8 +125,9 @@ onGetMadlibLibraryMsg = () => {
 };
 
 onSetupConfigMsg = payload => {
+  clearTwitchConnection();
   chatTimer = payload.inputTimer;
-  streamUrlStripped = payload.streamUrl.trim();
+  streamUrlStripped = payload.streamUrl.trim(); //pbly unnecessary
   opts.channels = [streamUrlStripped];
   clientSetup();
 };
